@@ -23,8 +23,12 @@ namespace SemiconductorTeaching
         public string recombinationDescription = "电子和空穴在结区附近相遇并复合，移动载流子减少，中间区域逐渐变成耗尽层。";
         public string depletionTitle = "耗尽层形成";
         public string depletionDescription = "复合后留下不能自由移动的固定离子，形成内建电场，阻止载流子继续无限扩散。";
-        public string fullAnimationTitle = "PN 结形成过程";
-        public string fullAnimationDescription = "完整演示会依次表现扩散、复合和耗尽层形成，帮助理解 PN 结从接触到稳定的过程。";
+        public string forwardBiasTitle = "正向偏置";
+        public string forwardBiasDescription = "外加正向电压会削弱内建电场，使耗尽层变窄，电子和空穴更容易越过结区形成导通电流。";
+        public string reverseBiasTitle = "反向偏置";
+        public string reverseBiasDescription = "外加反向电压会增强内建电场，使耗尽层变宽，多数载流子被拉离结区，电流近似截止。";
+        public string fullAnimationTitle = "完整演示";
+        public string fullAnimationDescription = "完整演示会依次表现扩散、复合、耗尽层形成、正向导通和反向截止。";
         public string resetAnimationTitle = "演示复位";
         public string resetAnimationDescription = "模型已回到演示前状态，可以重新选择某一段过程观察。";
 
@@ -61,9 +65,15 @@ namespace SemiconductorTeaching
                     SetContent(depletionTitle, depletionDescription);
                     break;
                 case 3:
-                    SetContent(fullAnimationTitle, fullAnimationDescription);
+                    SetContent(forwardBiasTitle, forwardBiasDescription);
                     break;
                 case 4:
+                    SetContent(reverseBiasTitle, reverseBiasDescription);
+                    break;
+                case 5:
+                    SetContent(fullAnimationTitle, fullAnimationDescription);
+                    break;
+                case 6:
                     SetContent(resetAnimationTitle, resetAnimationDescription);
                     break;
             }

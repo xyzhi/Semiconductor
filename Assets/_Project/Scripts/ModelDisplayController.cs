@@ -14,6 +14,7 @@ namespace SemiconductorTeaching
         Transform pPart;
         Transform nPart;
         ModelIntroductionPanel introductionPanel;
+        PNJunctionAnimationButton[] animationButtons;
         Vector3 waferNormalScale;
         Vector3 pnNormalScale;
         Vector3 pCombinedPosition;
@@ -44,6 +45,7 @@ namespace SemiconductorTeaching
             pPart = pnJunctionModel.transform.Find("PPart");
             nPart = pnJunctionModel.transform.Find("NPart");
             introductionPanel = FindObjectOfType<ModelIntroductionPanel>();
+            animationButtons = FindObjectsOfType<PNJunctionAnimationButton>(true);
             if (pPart == null || nPart == null)
             {
                 Debug.LogError("PNJunctionModel requires PPart and NPart child transforms.", this);
@@ -68,6 +70,11 @@ namespace SemiconductorTeaching
             if (targetView != currentView)
             {
                 introductionPanel?.Show(modelIndex);
+                if (targetView != ModelView.PNJunction)
+                {
+                    SetAnimationButtonsVisible(false);
+                }
+
                 StartCoroutine(ChangeModel(targetView));
             }
         }
@@ -102,6 +109,7 @@ namespace SemiconductorTeaching
             }
 
             currentView = targetView;
+            SetAnimationButtonsVisible(currentView == ModelView.PNJunction);
             isTransitioning = false;
         }
 
@@ -147,6 +155,23 @@ namespace SemiconductorTeaching
             pnJunctionModel.SetActive(targetView != ModelView.Wafer);
             PreparePNJunction(targetView);
             currentView = targetView;
+            SetAnimationButtonsVisible(currentView == ModelView.PNJunction);
+        }
+
+        void SetAnimationButtonsVisible(bool visible)
+        {
+            if (animationButtons == null)
+            {
+                return;
+            }
+
+            foreach (var button in animationButtons)
+            {
+                if (button != null && button.animationIndex >= 0)
+                {
+                    button.gameObject.SetActive(visible);
+                }
+            }
         }
 
         IEnumerator Scale(Transform target, Vector3 from, Vector3 to)

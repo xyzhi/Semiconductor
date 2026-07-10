@@ -14,6 +14,10 @@ namespace SemiconductorTeaching
         public float recombinedCarrierScale = 0.22f;
         public float ionPulseScale = 1.55f;
         public float depletionPulseScale = 1.35f;
+        public float biasDuration = 2.4f;
+        public float biasCarrierMoveDistance = 0.085f;
+        public float forwardDepletionScale = 0.45f;
+        public float reverseDepletionScale = 1.8f;
 
         Transform[] electrons;
         Transform[] holes;
@@ -32,6 +36,8 @@ namespace SemiconductorTeaching
             Diffusion,
             Recombination,
             Depletion,
+            ForwardBias,
+            ReverseBias,
             Full,
             Reset
         }
@@ -73,7 +79,7 @@ namespace SemiconductorTeaching
 
         public void PlayByIndex(int animationIndex)
         {
-            if (animationIndex < 0 || animationIndex > 4)
+            if (animationIndex < 0 || animationIndex > 6)
             {
                 return;
             }
@@ -89,6 +95,12 @@ namespace SemiconductorTeaching
                     break;
                 case AnimationSegment.Depletion:
                     PlayDepletion();
+                    break;
+                case AnimationSegment.ForwardBias:
+                    PlayForwardBias();
+                    break;
+                case AnimationSegment.ReverseBias:
+                    PlayReverseBias();
                     break;
                 case AnimationSegment.Full:
                     PlayFull();
@@ -123,6 +135,16 @@ namespace SemiconductorTeaching
             StartAnimation(AnimateFull());
         }
 
+        public void PlayForwardBias()
+        {
+            StartAnimation(AnimateForwardBias(true));
+        }
+
+        public void PlayReverseBias()
+        {
+            StartAnimation(AnimateReverseBias(true));
+        }
+
         void StartAnimation(IEnumerator routine)
         {
             if (animationRoutine != null)
@@ -152,8 +174,60 @@ namespace SemiconductorTeaching
                 yield return new WaitForSeconds(pauseDuration);
             }
 
+            yield return AnimateForwardBias(false);
+            if (pauseDuration > 0f)
+            {
+                yield return new WaitForSeconds(pauseDuration);
+            }
+
+            yield return AnimateReverseBias(false);
+            if (pauseDuration > 0f)
+            {
+                yield return new WaitForSeconds(pauseDuration);
+            }
+
             yield return RestoreOverTime();
             animationRoutine = null;
+        }
+
+        IEnumerator AnimateForwardBias(bool clearWhenDone)
+        {
+            yield return AnimateBias(Vector3.left, Vector3.right, forwardDepletionScale, 0.25f);
+            if (clearWhenDone)
+            {
+                animationRoutine = null;
+            }
+        }
+
+        IEnumerator AnimateReverseBias(bool clearWhenDone)
+        {
+            yield return AnimateBias(Vector3.right, Vector3.left, reverseDepletionScale, 1f);
+            if (clearWhenDone)
+            {
+                animationRoutine = null;
+            }
+        }
+
+        IEnumerator AnimateBias(Vector3 electronDirection, Vector3 holeDirection, float depletionWidth, float ionWave)
+        {
+            var elapsed = 0f;
+            var duration = Mathf.Max(0.01f, biasDuration);
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                var t = Smooth(elapsed / duration);
+                var wave = 0.65f + 0.35f * Mathf.Sin(t * Mathf.PI * 6f);
+                MoveCarriers(electrons, electronStartPositions, electronStartScales, electronDirection, t, 1f, biasCarrierMoveDistance);
+                MoveCarriers(holes, holeStartPositions, holeStartScales, holeDirection, t, 1f, biasCarrierMoveDistance);
+                SetDepletionWidth(Mathf.Lerp(1f, depletionWidth, t));
+                PulseIons(Mathf.Lerp(0f, ionWave, t) * wave);
+                yield return null;
+            }
+
+            MoveCarriers(electrons, electronStartPositions, electronStartScales, electronDirection, 1f, 1f, biasCarrierMoveDistance);
+            MoveCarriers(holes, holeStartPositions, holeStartScales, holeDirection, 1f, 1f, biasCarrierMoveDistance);
+            SetDepletionWidth(depletionWidth);
+            PulseIons(ionWave);
         }
 
         IEnumerator AnimateSegment(float from, float to, float duration)
@@ -202,8 +276,8 @@ namespace SemiconductorTeaching
             if (cycleTime <= diffusionEnd)
             {
                 var t = Smooth(cycleTime / Mathf.Max(0.01f, diffusionEnd));
-                MoveCarriers(electrons, electronStartPositions, electronStartScales, Vector3.left, t, 1f);
-                MoveCarriers(holes, holeStartPositions, holeStartScales, Vector3.right, t, 1f);
+                MoveCarriers(electrons, electronStartPositions, electronStartScales, Vector3.left, t, 1f, carrierMoveDistance);
+                MoveCarriers(holes, holeStartPositions, holeStartScales, Vector3.right, t, 1f, carrierMoveDistance);
                 PulseIons(t * 0.35f);
                 PulseDepletionLayer(t * 0.35f);
                 return;
@@ -212,8 +286,8 @@ namespace SemiconductorTeaching
             if (cycleTime <= recombinationEnd)
             {
                 var t = Smooth((cycleTime - diffusionEnd) / Mathf.Max(0.01f, recombinationEnd - diffusionEnd));
-                MoveCarriers(electrons, electronStartPositions, electronStartScales, Vector3.left, 1f, Mathf.Lerp(1f, recombinedCarrierScale, t));
-                MoveCarriers(holes, holeStartPositions, holeStartScales, Vector3.right, 1f, Mathf.Lerp(1f, recombinedCarrierScale, t));
+                MoveCarriers(electrons, electronStartPositions, electronStartScales, Vector3.left, 1f, Mathf.Lerp(1f, recombinedCarrierScale, t), carrierMoveDistance);
+                MoveCarriers(holes, holeStartPositions, holeStartScales, Vector3.right, 1f, Mathf.Lerp(1f, recombinedCarrierScale, t), carrierMoveDistance);
                 PulseIons(Mathf.Lerp(0.35f, 1f, t));
                 PulseDepletionLayer(Mathf.Lerp(0.35f, 1f, t));
                 return;
@@ -221,8 +295,8 @@ namespace SemiconductorTeaching
 
             var pulseT = (cycleTime - recombinationEnd) / Mathf.Max(0.01f, 1f - recombinationEnd);
             var pulse = 0.75f + 0.25f * Mathf.Sin(pulseT * Mathf.PI * 4f);
-            MoveCarriers(electrons, electronStartPositions, electronStartScales, Vector3.left, 1f, recombinedCarrierScale);
-            MoveCarriers(holes, holeStartPositions, holeStartScales, Vector3.right, 1f, recombinedCarrierScale);
+            MoveCarriers(electrons, electronStartPositions, electronStartScales, Vector3.left, 1f, recombinedCarrierScale, carrierMoveDistance);
+            MoveCarriers(holes, holeStartPositions, holeStartScales, Vector3.right, 1f, recombinedCarrierScale, carrierMoveDistance);
             PulseIons(pulse);
             PulseDepletionLayer(pulse);
         }
@@ -233,13 +307,14 @@ namespace SemiconductorTeaching
             Vector3[] startScales,
             Vector3 direction,
             float moveT,
-            float scaleMultiplier)
+            float scaleMultiplier,
+            float moveDistance)
         {
             for (var i = 0; i < carriers.Length; i++)
             {
                 if (carriers[i] != null)
                 {
-                    carriers[i].localPosition = startPositions[i] + direction * carrierMoveDistance * moveT;
+                    carriers[i].localPosition = startPositions[i] + direction * moveDistance * moveT;
                     carriers[i].localScale = startScales[i] * scaleMultiplier;
                 }
             }
@@ -258,13 +333,18 @@ namespace SemiconductorTeaching
 
         void PulseDepletionLayer(float pulse)
         {
+            SetDepletionWidth(Mathf.Lerp(1f, depletionPulseScale, pulse));
+        }
+
+        void SetDepletionWidth(float multiplier)
+        {
             if (depletionLayer == null)
             {
                 return;
             }
 
             var scale = depletionLayerStartScale;
-            scale.x *= Mathf.Lerp(1f, depletionPulseScale, pulse);
+            scale.x *= multiplier;
             depletionLayer.localScale = scale;
         }
 
