@@ -444,7 +444,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 500403, guid: b713354bce3c4e559c3c99cd84d31198, type: 3}
       propertyPath: m_Text
-      value: "\u6676\u5706\u662F\u5236\u9020\u534A\u5BFC\u4F53\u5668\u4EF6\u7684\u57FA\u7840\u6750\u6599\uFF0C\u4E5F\u662F\u540E\u7EED\u63BA\u6742\u4E0E\u5F62\u6210 PN \u7ED3\u7684\u8F7D\u4F53\u3002"
+      value: "\u6676\u5706\u662F\u5236\u9020\u534A\u5BFC\u4F53\u5668\u4EF6\u7684\u57FA\u7840\u6750\u6599\uFF0C\u4E5F\u662F\u540E\u7EED\u63BA\u6742\u4E0E\u5F62\u6210
+        PN \u7ED3\u7684\u8F7D\u4F53\u3002"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -488,6 +489,10 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 810001, guid: 74920f71a65d490d85d6eff50eaed933, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.4
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -508,6 +513,10 @@ PrefabInstance:
     - target: {fileID: 820001, guid: d81273a77e0747218cf012bdbd4a0314, type: 3}
       propertyPath: m_RootOrder
       value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 820001, guid: d81273a77e0747218cf012bdbd4a0314, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
