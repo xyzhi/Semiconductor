@@ -10,11 +10,13 @@ namespace SemiconductorTeaching
 
         Button button;
         PNJunctionTeachingAnimator animator;
+        ModelIntroductionPanel introductionPanel;
 
         void Awake()
         {
             button = GetComponent<Button>();
             animator = FindAnimator();
+            introductionPanel = FindObjectOfType<ModelIntroductionPanel>();
             button.onClick.AddListener(PlayAnimation);
         }
 
@@ -44,6 +46,7 @@ namespace SemiconductorTeaching
             }
 
             animator.PlayByIndex(animationIndex);
+            introductionPanel?.ShowAnimation(animationIndex);
         }
 
         static PNJunctionTeachingAnimator FindAnimator()
