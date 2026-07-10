@@ -6,7 +6,7 @@ namespace SemiconductorTeaching
     public sealed class ModelDisplayController : MonoBehaviour
     {
         public float animationDuration = 0.55f;
-        public float enlargedScale = 1.8f;
+        public float enlargedScale = 2.6f;
         public float reducedScale = 0.15f;
 
         GameObject waferModel;
@@ -78,7 +78,9 @@ namespace SemiconductorTeaching
 
             if (currentView == ModelView.Wafer)
             {
-                yield return Scale(waferModel.transform, waferNormalScale, waferNormalScale * enlargedScale);
+                var waferStartScale = waferModel.transform.localScale;
+                var waferExitScale = ScaleAboveCurrent(waferNormalScale * enlargedScale, waferStartScale);
+                yield return Scale(waferModel.transform, waferStartScale, waferExitScale);
                 waferModel.SetActive(false);
                 PreparePNJunction(targetView);
                 pnJunctionModel.transform.localScale = pnNormalScale * reducedScale;
@@ -87,7 +89,8 @@ namespace SemiconductorTeaching
             }
             else if (targetView == ModelView.Wafer)
             {
-                yield return Scale(pnJunctionModel.transform, pnNormalScale, pnNormalScale * reducedScale);
+                var pnStartScale = pnJunctionModel.transform.localScale;
+                yield return Scale(pnJunctionModel.transform, pnStartScale, pnNormalScale * reducedScale);
                 pnJunctionModel.SetActive(false);
                 waferModel.transform.localScale = waferNormalScale * enlargedScale;
                 waferModel.SetActive(true);
@@ -163,6 +166,16 @@ namespace SemiconductorTeaching
         {
             value = Mathf.Clamp01(value);
             return value * value * (3f - 2f * value);
+        }
+
+        static Vector3 ScaleAboveCurrent(Vector3 targetScale, Vector3 currentScale)
+        {
+            if (currentScale.x >= targetScale.x || currentScale.y >= targetScale.y || currentScale.z >= targetScale.z)
+            {
+                return currentScale * 1.15f;
+            }
+
+            return targetScale;
         }
     }
 }
